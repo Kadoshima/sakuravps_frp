@@ -1,0 +1,49 @@
+---
+- hosts: proxy
+  become: true
+  tasks:
+    - name: Install packages
+      apt:
+        name:
+          - docker.io
+          - docker-compose-plugin
+          - ufw
+        state: present
+        update_cache: yes
+
+    - name: UFW allow needed ports
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: [ "22", "80", "443", "7000", "8080" ]
+
+    - name: Create directories
+      file:
+        path: "/opt/proxy/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: [ "config", "compose" ]
+
+    - name: Deploy docker-compose.yml
+      copy:
+        src: files/docker-compose.yml
+        dest: /opt/proxy/compose/docker-compose.yml
+        mode: "0644"
+
+    - name: Render frps.toml
+      template:
+        src: files/frps.toml.j2
+        dest: /opt/proxy/config/frps.toml
+        mode: "0640"
+
+    - name: Render Caddyfile
+      template:
+        src: files/Caddyfile.j2
+        dest: /opt/proxy/config/Caddyfile
+        mode: "0644"
+
+    - name: Pull & up containers
+      community.docker.docker_compose_v2:
+        project_src: /opt/proxy/compose
+        state: present

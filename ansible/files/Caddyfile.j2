@@ -1,0 +1,23 @@
+{
+  email {{ acme_email }}
+}
+
+# *.proxy.example.com を全部受けて Host を維持したまま frps:8080 へ
+*.{{ domain }} {
+  encode zstd gzip
+  reverse_proxy frps:8080 {
+    header_up Host {host}
+    header_up X-Forwarded-For {remote}
+    header_up X-Forwarded-Proto {scheme}
+  }
+}
+
+# 親FQDN（proxy.example.com）も必要なら
+{{ domain }} {
+  encode zstd gzip
+  reverse_proxy frps:8080 {
+    header_up Host {host}
+    header_up X-Forwarded-For {remote}
+    header_up X-Forwarded-Proto {scheme}
+  }
+}

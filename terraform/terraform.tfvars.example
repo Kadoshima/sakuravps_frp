@@ -1,0 +1,16 @@
+# VPS接続情報
+vps_ip           = "133.167.xxx.xxx"   # Sakura VPS のグローバルIP
+ssh_user         = "ubuntu"            # SSH接続ユーザー（ubuntu/debian/root等）
+private_key_path = "~/.ssh/id_ed25519" # SSH秘密鍵のパス
+
+# 踏み台サーバー（不要なら空文字列のまま）
+bastion_host = ""
+bastion_user = ""
+
+# frps + Caddy 設定
+domain     = "proxy.example.com"       # サブドメイン親FQDN（*.proxy.example.comをVPSへ向ける）
+acme_email = "you@example.com"         # Let's Encrypt通知用メールアドレス
+frp_token  = "CHANGE_ME_LONG_RANDOM"   # frps-frpc間の認証トークン（長い乱数を推奨）
+
+# ファイアウォール設定（UFWで開放するポート）
+open_ports = ["22", "80", "443", "7000", "8080"]

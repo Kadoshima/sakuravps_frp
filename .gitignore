@@ -1,0 +1,49 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfvars
+!terraform/terraform.tfvars.example
+terraform/crash.log
+terraform/crash.*.log
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+
+# Secrets
+secrets/
+*.secret
+*.key
+*.pem
+*_rsa
+*_ed25519
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Ansible
+ansible/group_vars/all.yml
+ansible/inventory.ini
+
+# Backups
+backups/
+*.backup
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

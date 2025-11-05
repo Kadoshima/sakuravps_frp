@@ -1,0 +1,17 @@
+bindPort      = 7000
+vhostHTTPPort = 8080
+subdomainHost = "{{ domain }}"
+
+[transport.tls]
+enable = true
+force  = true
+
+[auth]
+method = "token"
+token  = "{{ frp_token }}"
+
+[webServer]            # ダッシュボード（必要ならIP制限をNginx/Caddyで）
+addr = "0.0.0.0"
+port = 7500
+user = "admin"
+password = "change-me"

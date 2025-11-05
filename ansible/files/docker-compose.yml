@@ -1,0 +1,28 @@
+services:
+  frps:
+    image: fatedier/frps:latest
+    container_name: frps
+    restart: unless-stopped
+    volumes:
+      - ../config/frps.toml:/etc/frp/frps.toml:ro
+    command: ["-c", "/etc/frp/frps.toml"]
+    ports:
+      - "7000:7000"   # frps bindPort
+      - "8080:8080"   # vhostHTTPPort (Caddyから内部転送)
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    depends_on: [ frps ]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
