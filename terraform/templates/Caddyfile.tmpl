@@ -1,9 +1,47 @@
+%{ if caddy_mode == "http-only" ~}
 {
   email ${acme_email}
+%{ if enable_influxdb ~}
+  acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
+  debug
+%{ endif ~}
 }
 
-# *.proxy.example.com を全部受けて Host を維持したまま frps:8080 へ
-*.${domain} {
+# ルートドメインは直接応答（健康チェック・トップページ）
+http://${domain} {
+  respond "FRP edge is running (HTTP-only). Use subdomains (e.g. http://<id>.${domain})." 200
+}
+
+# サブドメインは frps:8080 へプロキシ
+http://*.${domain} {
+  reverse_proxy frps:8080 {
+    header_up Host {host}
+    header_up X-Forwarded-For {remote}
+    header_up X-Forwarded-Proto http
+  }
+}
+%{ if enable_influxdb ~}
+
+# Influx (TLS, DNS-01 via Cloudflare)
+https://influx.${domain} {
+  tls {
+    dns cloudflare {$CLOUDFLARE_API_TOKEN}
+  }
+  encode zstd gzip
+  reverse_proxy influxdb:8086
+}
+%{ endif ~}
+%{ else ~}
+{
+  email ${acme_email}
+  acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
+}
+
+# ワイルドカード証明書でサブドメインを受け付ける（HTTPS明示）
+https://*.${domain} {
+  tls {
+    dns cloudflare {$CLOUDFLARE_API_TOKEN}
+  }
   encode zstd gzip
   reverse_proxy frps:8080 {
     header_up Host {host}
@@ -12,8 +50,8 @@
   }
 }
 
-# 親FQDN（proxy.example.com）も必要なら
-${domain} {
+# 親ドメイン（HTTPS明示）
+https://${domain} {
   encode zstd gzip
   reverse_proxy frps:8080 {
     header_up Host {host}
@@ -21,3 +59,11 @@ ${domain} {
     header_up X-Forwarded-Proto {scheme}
   }
 }
+%{ if enable_influxdb ~}
+
+https://influx.${domain} {
+  encode zstd gzip
+  reverse_proxy influxdb:8086
+}
+%{ endif ~}
+%{ endif ~}

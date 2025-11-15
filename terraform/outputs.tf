@@ -1,14 +1,15 @@
+# outputs.tf の deployment_status を置き換え
 output "deployment_status" {
   value = <<-EOT
     ✓ frpsサーバーのデプロイが完了しました。
 
     【サービス情報】
     - frps: ポート 7000 (クライアント接続), 8080 (内部HTTP), 7500 (ダッシュボード)
-    - Caddy: ポート 80, 443 (HTTPS自動TLS)
+    - Caddy: %{if var.enable_caddy}%{if var.caddy_mode == "http-only"}ポート 80 (HTTPのみ)%{else}ポート 80, 443 (HTTPS自動TLS)%{endif}%{else}起動なし%{endif}
 
     【アクセス】
-    - メインドメイン: https://${var.domain}
-    - サブドメイン例: https://<任意ID>.${var.domain}
+    - メインドメイン: http%{if var.enable_caddy && var.caddy_mode != "http-only"}s%{endif}://${var.domain}
+    - サブドメイン例: http%{if var.enable_caddy && var.caddy_mode != "http-only"}s%{endif}://<任意ID>.${var.domain}
 
     【次のステップ】
     1. frpcクライアントを設定して接続テスト
@@ -37,7 +38,6 @@ output "frpc_config_example" {
     name      = "myservice"
     type      = "http"
     localPort = 8080
-    subdomain = "myservice"  # => https://myservice.${var.domain}
+    subdomain = "myservice"  # => http%{if var.enable_caddy && var.caddy_mode != "http-only"}s%{endif}://myservice.${var.domain}
   EOT
-  description = "frpcクライアントの設定例"
 }

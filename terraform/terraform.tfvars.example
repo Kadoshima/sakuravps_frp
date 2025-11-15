@@ -8,9 +8,19 @@ bastion_host = ""
 bastion_user = ""
 
 # frps + Caddy 設定
-domain     = "proxy.example.com"       # サブドメイン親FQDN（*.proxy.example.comをVPSへ向ける）
-acme_email = "you@example.com"         # Let's Encrypt通知用メールアドレス
-frp_token  = "CHANGE_ME_LONG_RANDOM"   # frps-frpc間の認証トークン（長い乱数を推奨）
+domain            = "proxy.example.com"       # サブドメイン親FQDN（*.proxy.example.comをVPSへ向ける）
+acme_email        = "you@example.com"         # Let's Encrypt通知用メールアドレス
+frp_token         = "CHANGE_ME_LONG_RANDOM"   # frps-frpc間の認証トークン（長い乱数を推奨）
+cloudflare_token  = "YOUR_CLOUDFLARE_TOKEN"   # CloudflareのAPIトークン（DNS-01チャレンジ用）
 
 # ファイアウォール設定（UFWで開放するポート）
 open_ports = ["22", "80", "443", "7000", "8080"]
+
+# --- InfluxDB (optional) ---
+# enable_influxdb            = true
+# influxdb_init_username     = "tp24007"
+# influxdb_init_password     = "CHANGE_ME_STRONG"
+# influxdb_init_org          = "kimulab"
+# influxdb_init_bucket       = "IoT"
+# influxdb_init_admin_token  = "GENERATE_RANDOM_64+"
+# influxdb_retention         = "90d"

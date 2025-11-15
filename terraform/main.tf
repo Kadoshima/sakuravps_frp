@@ -5,25 +5,44 @@ terraform {
 # テンプレートファイルから設定を生成
 locals {
   caddyfile = templatefile("${path.module}/templates/Caddyfile.tmpl", {
-    domain     = var.domain
-    acme_email = var.acme_email
+    domain          = var.domain
+    acme_email      = var.acme_email
+    caddy_mode      = var.caddy_mode
+    enable_influxdb = var.enable_influxdb
   })
   frps_toml = templatefile("${path.module}/templates/frps.toml.tmpl", {
-    domain    = var.domain
-    frp_token = var.frp_token
+    domain     = var.domain
+    frp_token  = var.frp_token
+    tls_enable = var.tls_enable
+    tls_force  = var.tls_force
   })
-  compose_yml = templatefile("${path.module}/templates/docker-compose.yml.tmpl", {})
+  compose_yml = templatefile("${path.module}/templates/docker-compose.yml.tmpl", {
+    cloudflare_token          = var.cloudflare_token
+    enable_caddy              = var.enable_caddy
+    caddy_mode                = var.caddy_mode
+    tls_force                 = var.tls_force
+    enable_influxdb           = var.enable_influxdb
+    influxdb_init_username    = var.influxdb_init_username
+    influxdb_init_password    = var.influxdb_init_password
+    influxdb_init_org         = var.influxdb_init_org
+    influxdb_init_bucket      = var.influxdb_init_bucket
+    influxdb_init_admin_token = var.influxdb_init_admin_token
+    influxdb_retention        = var.influxdb_retention
+  })
 }
+
 
 # VPSへのfrps + Caddy デプロイ
 resource "null_resource" "provision" {
   triggers = {
-    host       = var.vps_ip
-    caddy_hash = sha256(local.caddyfile)
-    frps_hash  = sha256(local.frps_toml)
-    comp_hash  = sha256(local.compose_yml)
-    ports_hash = sha256(join(",", var.open_ports))
+    host         = var.vps_ip
+    caddy_hash   = sha256(local.caddyfile)
+    frps_hash    = sha256(local.frps_toml)
+    comp_hash    = sha256(local.compose_yml)
+    ports_hash   = sha256(join(",", var.open_ports))
+    force_toggle = tostring(var.force_redeploy)
   }
+
 
   connection {
     type        = "ssh"

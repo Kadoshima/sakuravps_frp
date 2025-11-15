@@ -1,28 +1,58 @@
 services:
   frps:
-    image: snowdreamtech/frps:0.61.0
+    image: ghcr.io/fatedier/frps:v0.61.0
     container_name: frps
     restart: unless-stopped
     volumes:
       - ../config/frps.toml:/etc/frp/frps.toml:ro
+%{ if tls_force ~}
+    command: ["--tls-only", "-c", "/etc/frp/frps.toml"]
+%{ else ~}
     command: ["-c", "/etc/frp/frps.toml"]
+%{ endif ~}
     ports:
-      - "7000:7000"   # frps bindPort
-      - "8080:8080"   # vhostHTTPPort（Caddyから内部転送）
+      - "7000:7000"
+      - "8080:8080"
 
+%{ if enable_caddy ~}
   caddy:
-    image: caddy:2
+    image: slothcroissant/caddy-cloudflaredns:latest
     container_name: caddy
     restart: unless-stopped
-    depends_on: [ frps ]
+    depends_on: [ frps%{ if enable_influxdb ~}, influxdb%{ endif ~} ]
     ports:
       - "80:80"
       - "443:443"
+%{ if caddy_mode == "dns01-cloudflare" || enable_influxdb ~}
+    environment:
+      - CLOUDFLARE_API_TOKEN=${cloudflare_token}
+%{ endif ~}
     volumes:
       - ../config/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+%{ endif ~}
+
+%{ if enable_influxdb ~}
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${influxdb_init_username}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${influxdb_init_password}
+      - DOCKER_INFLUXDB_INIT_ORG=${influxdb_init_org}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${influxdb_init_bucket}
+      - DOCKER_INFLUXDB_INIT_RETENTION=${influxdb_retention}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${influxdb_init_admin_token}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+%{ endif ~}
 
 volumes:
   caddy_data:
   caddy_config:
+%{ if enable_influxdb ~}
+  influxdb_data:
+%{ endif ~}
